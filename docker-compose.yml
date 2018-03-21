@@ -1,0 +1,45 @@
+version: '2'
+
+services:
+
+    nginx:
+        build: ./nginx/
+        expose:
+            - 80
+        ports:
+            - "80:80"
+        links:
+            - fpm
+        volumes:
+            - ./nginx/conf/:/etc/nginx/conf.d/
+            - ./nginx/logs/:/home/logs
+            - ./nginx/error:/home/error
+            - ~/php/:/home/www
+    fpm:
+        build: 
+            context: ./fpm/
+            args:
+                - INSTALL_MEMCACHED=true
+                - INSTALL_XDEBUG=true
+                - INSTALL_MYSQLI=true
+        expose: 
+            - 9000
+        # seems like fpm receives the full path from nginx
+        # and tries to find the files in this dock, so it must
+        # be the same as nginx.root
+        volumes:
+            - ~/php:/home/www
+    memcached:
+          build: ./memcached/
+          expose:
+            - 11211
+          ports:
+            - "11211:11211"
+          mem_limit: 1g
+          command: memcached -m 1024m
+    redis: 
+        build: ./redis
+        expose:
+            - 6379
+        ports:
+            - "6379:6379"
